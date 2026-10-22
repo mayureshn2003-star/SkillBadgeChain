@@ -1,0 +1,49 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_34-2cd6d1bfdbbaf2a80d984b36df6950653ae351ba",
+  "solcVersion": "0.8.34",
+  "solcLongVersion": "0.8.34+commit.80d5c536",
+  "compilerType": "solc",
+  "toolVersions": {
+    "hardhat": "3.20.0"
+  },
+  "userSourceNameMap": {
+    "contracts/SkilledBadgeRegistry.sol": "project/contracts/SkilledBadgeRegistry.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "osaka",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode.linkReferences",
+            "evm.bytecode.object",
+            "evm.bytecode.opcodes",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.immutableReferences",
+            "evm.deployedBytecode.linkReferences",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.opcodes",
+            "evm.deployedBytecode.sourceMap",
+            "evm.methodIdentifiers"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/SkilledBadgeRegistry.sol": {
+        "content": "// SPDX-License-Identifier: MIT\r\npragma solidity ^0.8.20;\r\n\r\ncontract SkillBadgeRegistry {\r\n    address public admin;\r\n\r\n    struct Badge {\r\n        string studentName;\r\n        string skillName;\r\n        string issueDate;\r\n        bytes32 credentialHash;\r\n        bool isValid;\r\n    }\r\n\r\n    mapping(bytes32 => Badge) public badges;\r\n    mapping(address => bytes32[]) public studentBadges;\r\n\r\n    event BadgeIssued(bytes32 indexed credentialHash, address indexed student, string skillName);\r\n    event BadgeRevoked(bytes32 indexed credentialHash);\r\n\r\n    modifier onlyAdmin() {\r\n        require(msg.sender == admin, \"Only institution admin can issue badges\");\r\n        _;\r\n    }\r\n\r\n    constructor() {\r\n        admin = msg.sender;\r\n    }\r\n\r\n    function issueBadge(\r\n        address student,\r\n        string memory studentName,\r\n        string memory skillName,\r\n        string memory issueDate,\r\n        string memory uniqueSalt\r\n    ) public onlyAdmin returns (bytes32) {\r\n        bytes32 credentialHash = keccak256(\r\n            abi.encodePacked(student, studentName, skillName, issueDate, uniqueSalt)\r\n        );\r\n\r\n        require(!badges[credentialHash].isValid, \"Badge already exists\");\r\n\r\n        badges[credentialHash] = Badge({\r\n            studentName: studentName,\r\n            skillName: skillName,\r\n            issueDate: issueDate,\r\n            credentialHash: credentialHash,\r\n            isValid: true\r\n        });\r\n\r\n        studentBadges[student].push(credentialHash);\r\n\r\n        emit BadgeIssued(credentialHash, student, skillName);\r\n        return credentialHash;\r\n    }\r\n\r\n    function verifyBadge(bytes32 credentialHash) public view returns (\r\n        bool isValid,\r\n        string memory studentName,\r\n        string memory skillName,\r\n        string memory issueDate\r\n    ) {\r\n        Badge memory b = badges[credentialHash];\r\n        require(b.isValid, \"Invalid or non-existent credential hash\");\r\n        return (b.isValid, b.studentName, b.skillName, b.issueDate);\r\n    }\r\n}"
+      }
+    }
+  }
+}
